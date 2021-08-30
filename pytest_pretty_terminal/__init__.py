@@ -1,3 +1,5 @@
+"""pytest plugin for generating prettier terminal output"""
+
 import shutil
 from typing import Dict
 
@@ -22,7 +24,12 @@ except PackageNotFoundError:
     __version__ = "0.0.0"
 
 
-class Logreport:
+class Logreport:  # pylint: disable=too-few-public-methods
+    """
+
+    param config: pytest configuration values
+    """
+
     def __init__(self, config: Config):
         pytest.report = {}
         self.config = config
@@ -30,9 +37,17 @@ class Logreport:
 
 
     def pytest_runtest_logreport(self, report: TestReport):
-        """Empty log in pretty mode (will be done during execution, see calls of build_terminal_report())."""
+        """
+        Empty log in pretty mode (will be done during execution).
+
+        .. seealso:: :func:`_helpers.build_terminal_report`
+
+        :param report: Test report object
+        """
         item_info: Dict = getattr(report, "item_info", {})
-        worker_node_suffix = f" [{' -> '.join(filter(None, (report.node.gateway.id, item_info['atmcfg'].get('test_environment', None))))}]" if getattr(self.config.option, "dist", None) == "each" and getattr(report, "node") else ""
+        worker_node_suffix = f" [{' -> '.join(filter(None, (report.node.gateway.id, item_info['atmcfg'].get('test_environment', None))))}]" \
+            if getattr(self.config.option, "dist", None) == "each" and getattr(report, "node") \
+            else ""
 
         if item_info.get("report", {}):
             pytest.report.update({(item_info.get("nodeid") or "") + worker_node_suffix: item_info.get("report", {})})
@@ -70,8 +85,11 @@ class Logreport:
 
 
 def enable_terminal_report(config: Config):
-    """Enable terminal report."""
+    """
+    Enable terminal report.
 
+    :param config: pytest configuration values
+    """
     # pretty terminal reporting needs capturing to be turned off ("-s") to function properly
     if (
         getattr(config.option, "pretty", False)
@@ -85,11 +103,13 @@ def enable_terminal_report(config: Config):
 
 
 def patch_terminal_size(config: Config):
-    """Patch terminal size."""
+    """
+    Patch terminal size using tkinter, if possible.
 
+    :param config: pytest configuration values
+    """
     # this function tries to fix the layout issue related to jenkins console
     terminalreporter = config.pluginmanager.getplugin("terminalreporter")
-
     if not terminalreporter or not terminalreporter._tw:
         return
 
@@ -108,29 +128,33 @@ def patch_terminal_size(config: Config):
 
 @pytest.hookimpl(trylast=True)
 def pytest_configure(config: Config):
-    """Prepare and start logging/reporting (called at the beginning of the test process)."""
-    # init the terminal reporter
+    """
+    Prepare and start logging/reporting (called at the beginning of the test process).
+
+    :param config: pytest configuration values
+    """
     pytest.reporter = config.pluginmanager.getplugin("terminalreporter")
-
     config.pluginmanager.register(Logreport(config), "pretty_terminal")
-
     if not hasattr(config, "workerinput"):
         enable_terminal_report(config)
-
     patch_terminal_size(config)
 
 @pytest.hookimpl(tryfirst=True)
 def pytest_runtest_setup(item: Function):
-    """This is called before calling the test item (i.e. before any parameter/fixture call).
+    """
+    This is called before calling the test item (i.e. before any parameter/fixture call).
+    Used to skip test items dynamically (e.g. triggered by some other item or control function).
 
-        Used to skip test items dynamically (e.g. triggered by some other item or control function).
+    :param item: Item responsible for setting up and executing a Python test function
     """
     build_terminal_report(when="setup", item=item)
 
 def pytest_addoption(parser: Parser):
-    """Add options to control plugin."""
+    """
+    Add options to control plugin.
 
+    :param parser: Parser for command line arguments
+    """
     group = parser.getgroup("pretty-terminal")
-
     group.addoption("--pretty", action="store_true", dest="pretty", default=False,
                     help="Make pytest terminal output more readable (default: False)")

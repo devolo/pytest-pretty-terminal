@@ -1,6 +1,8 @@
+"""Helper methods for internal usage."""
+
 import inspect
 import re
-from typing import Dict, Optional
+from typing import Dict, Optional, Tuple
 
 import pytest
 from _pytest.python import Function
@@ -20,8 +22,12 @@ COLORMAP = {
     }
 }
 
-def get_item_name_and_spec(nodeid: str) -> Optional[str]:
-    """Split item nodeid into function name and - if existing - callspec res. parameterization."""
+def get_item_name_and_spec(nodeid: str) -> Tuple[str, Optional[str]]:
+    """Split item nodeid into function name and - if existing - callspec res. parameterization.
+
+        :param nodeid: Item's node ID
+        :returns: Function name, parameterization
+    """
     tokens = nodeid.split("[", 1)
     return tokens[0].strip(), "[" + tokens[1].strip() if len(tokens) > 1 else None
 
@@ -42,14 +48,12 @@ def get_item_nodeid(item: Function) -> str:
 def build_terminal_report(when: str, item: Function, status: str = None, step: int = None, level: int = 1):
     """Generate (pretty) terminal output.
 
-        :param when: The call info ("setup", "call").
-        :param item: The item to report.
-        :param status: The status ("passed", "failed", "skipped", "blocked").
-        :param item: The step index to report.
-        :param level: The stack trace level (1 = the caller's level, 2 = the caller's caller level, 3 = ...).
+        :param when: The call info ("setup", "call")
+        :param item: The item to report
+        :param status: The status ("passed", "failed", "skipped", "blocked")
+        :param item: The step index to report
+        :param level: The stack trace level (1 = the caller's level, 2 = the caller's caller level, 3 = ...)
     """
-    # pylint: disable=no-member  # pylint.reporter is set in pytest_configure
-    
     # extract doc string from source
     (frame, _, line, _, _) = inspect.stack()[level][0:5]
     source_list = inspect.getsourcelines(frame)
