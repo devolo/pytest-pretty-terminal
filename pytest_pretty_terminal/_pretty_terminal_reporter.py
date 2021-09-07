@@ -33,48 +33,20 @@ class PrettyTerminalReporter:
 
     def __init__(self, config: Config):
         """Constructor"""
-
-        # dictionary to store final report
-        pytest.report = {}
         self.config = config
         self.terminal_reporter: TerminalReporter = config.pluginmanager.getplugin("terminalreporter")
         self.terminal_reporter.showfspath = False
-
-    @pytest.hookimpl(hookwrapper=True, tryfirst=True)
-    def pytest_runtestloop(self, session):
-        
-        if session.config.option.collectonly:
-            yield
-            return
-
-        if self.config.getoption("verbose") < 1:
-            # The verbose flag is needed to avoid messy test progress output.
-            self.config.option.verbose = 1
-            session.config.pluginmanager.getplugin("logging-plugin").log_cli_level = 20
-            from _pytest.logging import catching_logs
-            
-        yield
 
     def pytest_runtest_logreport(self, report: TestReport):
         if not getattr(self.config.option, "pretty", False) or report.when == "teardown":
             return
 
-        item_info = getattr(report, "item_info", {})
         user_properties = dict(report.user_properties)
-        worker_node_suffix = f" [{' -> '.join(filter(None, (report.node.gateway.id, item_info['atmcfg'].get('test_environment', None))))}]" \
-            if getattr(self.config.option, "dist", None) == "each" and getattr(report, "node") \
-            else ""
+        worker_node_suffix = ""
+        if getattr(report, "node", None):
+            worker_node_suffix = " --> " + report.node.gateway.id
 
-        if item_info.get("report", {}):
-            pytest.report.update({(item_info.get("nodeid", None) or "") + worker_node_suffix: item_info.get("report", {})})
-
-        if not getattr(self.config.option, "pretty", False):
-            return
-
-        if report.when == "teardown":
-            return
-
-        title = report.nodeid.split("[", 1)[0].strip()
+        title = report.nodeid.split("[", 1)[0].strip() + worker_node_suffix
 
         if report.when == "setup":
             if (getattr(self.config.option, "numprocesses", 0) or 0) < 2:
@@ -84,7 +56,7 @@ class PrettyTerminalReporter:
                 return
 
         if (getattr(self.config.option, "numprocesses", 0) or 0) > 1:
-            self._print_docstring_and_params(title + worker_node_suffix, user_properties)
+            self._print_docstring_and_params(title, user_properties)
 
         self.terminal_reporter.write_sep("-", bold=True)
         fill = getattr(self.terminal_reporter, "_tw").fullwidth - getattr(self.terminal_reporter, "_width_of_current_line") - 1

@@ -1,11 +1,14 @@
 """pytest plugin for generating prettier terminal output"""
 
+import logging
 import shutil
 from importlib.metadata import PackageNotFoundError, version
 
 import pytest
 from _pytest.config import Config
 from _pytest.config.argparsing import Parser
+from _pytest.logging import (_LiveLoggingStreamHandler,
+                             get_log_level_for_setting, get_option_ini)
 from _pytest.python import Function
 from _pytest.reports import TestReport
 from _pytest.runner import CallInfo
@@ -13,6 +16,7 @@ from pluggy.callers import _Result
 from py.io import TerminalWriter
 
 from ._pretty_terminal_reporter import PrettyTerminalReporter
+
 try:
     __version__ = version("pytest_pretty_terminal")
 except PackageNotFoundError:
@@ -34,9 +38,6 @@ def pytest_runtest_makereport(item: Function, call: CallInfo):  # pylint: disabl
     if hasattr(item, 'callspec'):
         report.user_properties.append(("params", item.callspec.params))
     report.user_properties.append(("docstr", item.obj.__doc__))
-    # build_terminal_report(when="call", item=item)
-
-
 
 
 def enable_terminal_report(config: Config):
@@ -45,39 +46,48 @@ def enable_terminal_report(config: Config):
 
     :param config: The pytest config object
     """
-    terminalreporter = PrettyTerminalReporter(config)
-    config.pluginmanager.register(terminalreporter, "pretty_terminal_reporter")
-
     # pretty terminal reporting needs capturing to be turned off ("-s") to function properly
     if getattr(config.option, "pretty", False) and getattr(config.option, "capture", None) != "no":
+        terminalreporter = PrettyTerminalReporter(config)
+        config.pluginmanager.register(terminalreporter, "pretty_terminal_reporter")
+        
         setattr(config.option, "capture", "no")
         capturemanager = config.pluginmanager.getplugin("capturemanager")
         capturemanager.stop_global_capturing()
         setattr(capturemanager, "_method", getattr(config.option, "capture"))
         capturemanager.start_global_capturing()
 
-        
         terminalreporter = config.pluginmanager.getplugin("terminalreporter")
         config.pluginmanager.unregister(terminalreporter)
         
         terminalreporter.pytest_runtest_logstart = lambda nodeid, location: None
+        terminalreporter.pytest_runtest_logfinish = lambda nodeid: None
+        
         config.pluginmanager.register(terminalreporter, "terminalreporter")
+        
+        logging_plugin = config.pluginmanager.getplugin("logging-plugin")
+        
+        logging_plugin.log_cli_handler = _LiveLoggingStreamHandler(terminalreporter, capturemanager)
+        logging_plugin.log_cli_level = get_log_level_for_setting(config, "log_cli_level", "log_level") or logging.INFO
+        
+        log_cli_formatter = logging_plugin._create_formatter(
+            get_option_ini(config, "log_cli_format", "log_format"),
+            get_option_ini(config, "log_cli_date_format", "log_date_format"),
+            get_option_ini(config, "log_auto_indent"),
+        )
+        logging_plugin.log_cli_handler.setFormatter(log_cli_formatter)
 
 
 def patch_terminal_size(config: Config):
     """
     Patch terminal size.
-
+    this function tries to fix the layout issue related to jenkins console
     :param config: The pytest config object
     """
-
-    # this function tries to fix the layout issue related to jenkins console
-    terminalreporter = config.pluginmanager.getplugin("pretty_terminal_reporter")
-    if not terminalreporter:
-        return
-
+    terminal_reporter = config.pluginmanager.getplugin("pretty_terminal_reporter")
     terminal_writer: TerminalWriter = config.get_terminal_writer()
-    if not terminal_writer:
+    
+    if not terminal_reporter or not terminal_writer:
         return
 
     try:
@@ -100,31 +110,10 @@ def pytest_configure(config: Config):
     Perform initial configuration.
 
     :param config: The pytest config object
-    """
-    # terminalreporter = PrettyTerminalReporter(config)
-    # config.pluginmanager.register(terminalreporter, "pretty_terminal_reporter")
-    
+    """    
     if not hasattr(config, "workerinput"):
         enable_terminal_report(config)
     patch_terminal_size(config)
-
-
-
-def import_module(module_name: str):
-    """Import and return module if existing."""
-    try:
-        return pytest.importorskip(module_name)
-    except pytest.skip.Exception:
-        return None
-
-# if import_module("xdist"):
-#     @pytest.hookimpl(trylast=True)
-#     def pytest_configure_node(node: "WorkerController"):
-#         """This is called in case of using xdist to pass data to worker nodes."""
-#         node.workerinput["options"] = {
-#             "dist": node.config.option.dist,
-#             "numprocesses": node.config.option.numprocesses
-#         }
 
 
 def pytest_addoption(parser: Parser):
