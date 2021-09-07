@@ -7,7 +7,21 @@ from _pytest.config import Config
 from _pytest.reports import TestReport
 from _pytest.terminal import TerminalReporter
 
-from ._helpers import get_item_name_and_spec, get_status_color
+
+COLORMAP = {
+    "passed": {
+        "green": True, "bold": True
+    },
+    "failed": {
+        "red": True, "bold": True
+    },
+    "blocked": {
+        "blue": True, "bold": True
+    },
+    "skipped": {
+        "yellow": True, "bold": True
+    }
+}
 
 
 class PrettyTerminalReporter:
@@ -26,22 +40,30 @@ class PrettyTerminalReporter:
         self.terminal_reporter: TerminalReporter = config.pluginmanager.getplugin("terminalreporter")
         self.terminal_reporter.showfspath = False
 
+    @pytest.hookimpl(hookwrapper=True, tryfirst=True)
+    def pytest_runtestloop(self, session):
+        
+        if session.config.option.collectonly:
+            yield
+            return
+
+        if self.config.getoption("verbose") < 1:
+            # The verbose flag is needed to avoid messy test progress output.
+            self.config.option.verbose = 1
+            session.config.pluginmanager.getplugin("logging-plugin").log_cli_level = 20
+            from _pytest.logging import catching_logs
+            
+        yield
+
     def pytest_runtest_logreport(self, report: TestReport):
+        if not getattr(self.config.option, "pretty", False) or report.when == "teardown":
+            return
 
         item_info = getattr(report, "item_info", {})
         user_properties = dict(report.user_properties)
         worker_node_suffix = f" [{' -> '.join(filter(None, (report.node.gateway.id, item_info['atmcfg'].get('test_environment', None))))}]" \
             if getattr(self.config.option, "dist", None) == "each" and getattr(report, "node") \
             else ""
-
-        if item_info.get("atmcfg", None):
-            pytest.project_key = item_info["atmcfg"].get("project_key", None)
-            pytest.test_plan_key = item_info["atmcfg"].get("test_plan_key", None)
-            pytest.test_run_key = item_info["atmcfg"].get("test_run_key", None)
-            if not hasattr(pytest, "test_run_keys"):
-                pytest.test_run_keys = []
-            if pytest.test_run_key and pytest.test_run_key not in pytest.test_run_keys:
-                pytest.test_run_keys.append(pytest.test_run_key)
 
         if item_info.get("report", {}):
             pytest.report.update({(item_info.get("nodeid", None) or "") + worker_node_suffix: item_info.get("report", {})})
@@ -52,29 +74,21 @@ class PrettyTerminalReporter:
         if report.when == "teardown":
             return
 
+        title = report.nodeid.split("[", 1)[0].strip()
+
         if report.when == "setup":
             if (getattr(self.config.option, "numprocesses", 0) or 0) < 2:
-                title, _ = get_item_name_and_spec(report.nodeid)
-                self.terminal_reporter.line("")
-                self.terminal_reporter.write_sep("-", title, bold=True)
-                self.terminal_reporter.write_line(user_properties["docstr"] or "")
-                for parameter, value in user_properties.get("params", {}).items():
-                    self.terminal_reporter.write_line(f"Parameterization: {parameter}={value}")
+                self._print_docstring_and_params(title, user_properties)
 
             if not report.skipped:
                 return
 
         if (getattr(self.config.option, "numprocesses", 0) or 0) > 1:
-            title, _ = get_item_name_and_spec(report.nodeid)
-            self.terminal_reporter.line("")
-            self.terminal_reporter.write_sep("-", title + worker_node_suffix, bold=True)
-            self.terminal_reporter.write_line(user_properties["docstr"] or "")
-            for parameter, value in report.user_properties.get("params", {}).items():
-                self.terminal_reporter.write_line(f"Parameterization: {parameter}={value}")
+            self._print_docstring_and_params(title + worker_node_suffix, user_properties)
 
         self.terminal_reporter.write_sep("-", bold=True)
         fill = getattr(self.terminal_reporter, "_tw").fullwidth - getattr(self.terminal_reporter, "_width_of_current_line") - 1
-        self.terminal_reporter.write_line(report.outcome.upper().rjust(fill), **get_status_color(report.outcome))
+        self.terminal_reporter.write_line(report.outcome.upper().rjust(fill), **COLORMAP.get(report.outcome, {}))
 
     @pytest.hookimpl(tryfirst=True)
     def pytest_report_teststatus(self, report: TestReport) -> Optional[Tuple[str, str, str]]:
@@ -91,6 +105,12 @@ class PrettyTerminalReporter:
                     outcome = "error"
                 elif not report.skipped:
                     outcome = ""
-            return outcome, "", outcome.upper()
+            return outcome, "", ""
         return None
-        
+
+    def _print_docstring_and_params(self, title, user_properties):
+        self.terminal_reporter.line("")
+        self.terminal_reporter.write_sep("-", title, bold=True)
+        self.terminal_reporter.write_line(user_properties["docstr"] or "")
+        for parameter, value in user_properties.get("params", {}).items():
+            self.terminal_reporter.write_line(f"Parameterization: {parameter} = {value}")

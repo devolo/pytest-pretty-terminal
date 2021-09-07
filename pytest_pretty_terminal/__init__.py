@@ -13,7 +13,6 @@ from pluggy.callers import _Result
 from py.io import TerminalWriter
 
 from ._pretty_terminal_reporter import PrettyTerminalReporter
-
 try:
     __version__ = version("pytest_pretty_terminal")
 except PackageNotFoundError:
@@ -35,6 +34,9 @@ def pytest_runtest_makereport(item: Function, call: CallInfo):  # pylint: disabl
     if hasattr(item, 'callspec'):
         report.user_properties.append(("params", item.callspec.params))
     report.user_properties.append(("docstr", item.obj.__doc__))
+    # build_terminal_report(when="call", item=item)
+
+
 
 
 def enable_terminal_report(config: Config):
@@ -45,7 +47,6 @@ def enable_terminal_report(config: Config):
     """
     terminalreporter = PrettyTerminalReporter(config)
     config.pluginmanager.register(terminalreporter, "pretty_terminal_reporter")
-    pytest.reporter = config.pluginmanager.getplugin("pretty_terminal_reporter")
 
     # pretty terminal reporting needs capturing to be turned off ("-s") to function properly
     if getattr(config.option, "pretty", False) and getattr(config.option, "capture", None) != "no":
@@ -54,6 +55,13 @@ def enable_terminal_report(config: Config):
         capturemanager.stop_global_capturing()
         setattr(capturemanager, "_method", getattr(config.option, "capture"))
         capturemanager.start_global_capturing()
+
+        
+        terminalreporter = config.pluginmanager.getplugin("terminalreporter")
+        config.pluginmanager.unregister(terminalreporter)
+        
+        terminalreporter.pytest_runtest_logstart = lambda nodeid, location: None
+        config.pluginmanager.register(terminalreporter, "terminalreporter")
 
 
 def patch_terminal_size(config: Config):
@@ -93,17 +101,17 @@ def pytest_configure(config: Config):
 
     :param config: The pytest config object
     """
+    # terminalreporter = PrettyTerminalReporter(config)
+    # config.pluginmanager.register(terminalreporter, "pretty_terminal_reporter")
+    
     if not hasattr(config, "workerinput"):
         enable_terminal_report(config)
-        if pytest.reporter:
-            pytest.reporter.tr.section("ATM build meta data", bold=True)
-            pytest.reporter.tr.line("build_usr: %s" % ("build_usr" or "unknown"))
     patch_terminal_size(config)
+
 
 
 def import_module(module_name: str):
     """Import and return module if existing."""
-
     try:
         return pytest.importorskip(module_name)
     except pytest.skip.Exception:
