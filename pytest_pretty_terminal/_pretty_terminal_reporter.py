@@ -1,6 +1,6 @@
 """Terminal reporter module"""
 
-from typing import Optional, Tuple
+from typing import Any, Dict, Optional, Tuple
 
 import pytest
 from _pytest.config import Config
@@ -38,6 +38,11 @@ class PrettyTerminalReporter:
         self.terminal_reporter.showfspath = False
 
     def pytest_runtest_logreport(self, report: TestReport):
+        """
+        Process the test report.
+
+        :param report: The report object to be processed
+        """
         if not getattr(self.config.option, "pretty", False) or report.when == "teardown":
             return
 
@@ -80,7 +85,8 @@ class PrettyTerminalReporter:
             return outcome, "", ""
         return None
 
-    def _print_docstring_and_params(self, title, user_properties):
+    def _print_docstring_and_params(self, title: str, user_properties: Dict[str, Any]):
+        """Print docstring and parameters of a test case."""
         self.terminal_reporter.line("")
         self.terminal_reporter.write_sep("-", title, bold=True)
         self.terminal_reporter.write_line(user_properties["docstr"] or "")
