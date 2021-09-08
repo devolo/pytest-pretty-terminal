@@ -6,9 +6,11 @@ from importlib.metadata import PackageNotFoundError, version
 
 import pytest
 from _pytest._io.terminalwriter import TerminalWriter
-from _pytest.config import Config
+from _pytest.config import Config, create_terminal_writer
 from _pytest.config.argparsing import Parser
-from _pytest.logging import _LiveLoggingStreamHandler, get_log_level_for_setting, get_option_ini
+from _pytest.logging import (ColoredLevelFormatter, PercentStyleMultiline,
+                             _LiveLoggingStreamHandler,
+                             get_log_level_for_setting, get_option_ini)
 from _pytest.python import Function
 from _pytest.reports import TestReport
 from _pytest.runner import CallInfo
@@ -67,18 +69,15 @@ def enable_terminal_report(config: Config):
     terminal_reporter.pytest_runtest_logfinish = lambda nodeid: None
     config.pluginmanager.register(terminal_reporter, "terminalreporter")
 
-    # Enable logging and set and the loglevel. Without this, live logging would be disabled.
+    # Enable logging and set the loglevel. Without this, live logging would be disabled.
     # Still we want to respect to settings made via config.
     logging_plugin = config.pluginmanager.getplugin("logging-plugin")
     logging_plugin.log_cli_handler = _LiveLoggingStreamHandler(terminal_reporter, capture_manager)
     logging_plugin.log_cli_level = get_log_level_for_setting(config, "log_cli_level", "log_level") or logging.INFO
 
     def _create_formatter(log_format, log_date_format, auto_indent):
-        from _pytest.logging import ColoredLevelFormatter, PercentStyleMultiline
-        from _pytest.config import create_terminal_writer
-        formatter: logging.Formatter = ColoredLevelFormatter(
-            create_terminal_writer(config), log_format, log_date_format
-        )
+
+        formatter: logging.Formatter = ColoredLevelFormatter(create_terminal_writer(config), log_format, log_date_format)
         formatter._style = PercentStyleMultiline(formatter._style._fmt, auto_indent=auto_indent)
         return formatter
 
