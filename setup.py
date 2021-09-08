@@ -2,6 +2,7 @@ from setuptools import setup
 
 setup(name="pytest-pretty-terminal",
       packages=["pytest_pretty_terminal"],
+      package_data={"pytest_pretty_terminal": ["py.typed"]},
       description="pytest plugin for generating prettier terminal output",
       long_description=open("README.md").read(),
       long_description_content_type="text/markdown",
