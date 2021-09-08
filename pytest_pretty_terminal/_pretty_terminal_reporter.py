@@ -7,7 +7,6 @@ from _pytest.config import Config
 from _pytest.reports import TestReport
 from _pytest.terminal import TerminalReporter
 
-
 COLORMAP = {
     "passed": {"green": True, "bold": True},
     "failed": {"red": True, "bold": True},
