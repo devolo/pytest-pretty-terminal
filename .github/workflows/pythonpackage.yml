@@ -31,7 +31,7 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         python -m pip install flake8
-        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+        flake8 pytest_pretty_terminal --count --show-source --statistics --max-line-length 160
         flake8 . --count --exit-zero --statistics
     - name: Lint with pylint
       run: |
@@ -42,4 +42,4 @@ jobs:
     - name: Lint with mypy
       run: |
         python -m pip install mypy
-        mypy pytest_pretty_terminal
+        mypy --ignore-missing-imports pytest_pretty_terminal
