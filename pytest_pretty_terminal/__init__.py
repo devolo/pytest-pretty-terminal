@@ -6,11 +6,9 @@ from importlib.metadata import PackageNotFoundError, version
 
 import pytest
 from _pytest._io.terminalwriter import TerminalWriter
-from _pytest.config import Config, create_terminal_writer
+from _pytest.config import Config
 from _pytest.config.argparsing import Parser
-from _pytest.logging import (ColoredLevelFormatter, PercentStyleMultiline,
-                             _LiveLoggingStreamHandler,
-                             get_log_level_for_setting, get_option_ini)
+from _pytest.logging import _LiveLoggingStreamHandler, get_log_level_for_setting
 from _pytest.python import Function
 from _pytest.reports import TestReport
 from _pytest.runner import CallInfo
@@ -54,8 +52,8 @@ def enable_terminal_report(config: Config):
 
     capture_manager = config.pluginmanager.getplugin("capturemanager")
 
-    if getattr(config.option, "capture", None) != "no":
-        # Capturing needs to be turned off.
+    # Capturing needs to be turned off. Otherwise additional output might mess up our terminal.
+    if getattr(config.option, "capture") != "no":
         setattr(config.option, "capture", "no")
         capture_manager.stop_global_capturing()
         setattr(capture_manager, "_method", getattr(config.option, "capture"))
@@ -74,17 +72,6 @@ def enable_terminal_report(config: Config):
     logging_plugin = config.pluginmanager.getplugin("logging-plugin")
     logging_plugin.log_cli_handler = _LiveLoggingStreamHandler(terminal_reporter, capture_manager)
     logging_plugin.log_cli_level = get_log_level_for_setting(config, "log_cli_level", "log_level") or logging.INFO
-
-    def _create_formatter(log_format, log_date_format):
-
-        formatter: logging.Formatter = ColoredLevelFormatter(create_terminal_writer(config), log_format, log_date_format)
-        return formatter
-
-    log_cli_formatter = _create_formatter(
-        get_option_ini(config, "log_cli_format", "log_format"),
-        get_option_ini(config, "log_cli_date_format", "log_date_format")
-    )
-    logging_plugin.log_cli_handler.setFormatter(log_cli_formatter)
 
 
 def patch_terminal_size(config: Config):
