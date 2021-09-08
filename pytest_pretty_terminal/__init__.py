@@ -75,6 +75,17 @@ def enable_terminal_report(config: Config):
     logging_plugin.log_cli_handler = _LiveLoggingStreamHandler(terminal_reporter, capture_manager)
     logging_plugin.log_cli_level = get_log_level_for_setting(config, "log_cli_level", "log_level") or logging.INFO
 
+    def _create_formatter(log_format, log_date_format):
+
+        formatter: logging.Formatter = ColoredLevelFormatter(create_terminal_writer(config), log_format, log_date_format)
+        return formatter
+
+    log_cli_formatter = _create_formatter(
+        get_option_ini(config, "log_cli_format", "log_format"),
+        get_option_ini(config, "log_cli_date_format", "log_date_format")
+    )
+    logging_plugin.log_cli_handler.setFormatter(log_cli_formatter)
+
 
 def patch_terminal_size(config: Config):
     """
