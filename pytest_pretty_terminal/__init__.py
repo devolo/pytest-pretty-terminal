@@ -13,7 +13,7 @@ from _pytest.logging import (_LiveLoggingStreamHandler,
 from _pytest.python import Function
 from _pytest.reports import TestReport
 from _pytest.runner import CallInfo
-from pluggy.callers import _Result
+from pluggy._callers import _Result
 
 from ._pretty_terminal_reporter import PrettyTerminalReporter
 
