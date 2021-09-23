@@ -1,8 +1,9 @@
 """Terminal reporter module"""
 
-from typing import Any, Dict, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 import pytest
+from _pytest._io.terminalwriter import TerminalWriter
 from _pytest.config import Config
 from _pytest.reports import TestReport
 from _pytest.terminal import TerminalReporter
@@ -54,9 +55,11 @@ class PrettyTerminalReporter:
         if (getattr(self.config.option, "numprocesses", 0) or 0) > 1:
             self._print_docstring_and_params(title, user_properties)
 
+        terminal_writer: TerminalWriter = self.config.get_terminal_writer()
+        fill = terminal_writer.fullwidth - terminal_writer.width_of_current_line - 1
+        outcome = "blocked" if getattr(report, "blocked", False) else report.outcome  # Establish compatibility to pytest-adaptavist
+
         self.terminal_reporter.write_sep("-", bold=True)
-        fill = getattr(self.terminal_reporter, "_tw").fullwidth - getattr(self.terminal_reporter, "_width_of_current_line") - 1
-        outcome = "blocked" if getattr(report, "block", False) else report.outcome
         self.terminal_reporter.write_line(outcome.upper().rjust(fill), **COLORMAP.get(outcome, {}))
 
     @pytest.hookimpl()
@@ -72,7 +75,7 @@ class PrettyTerminalReporter:
             if report.when in ("collect", "setup", "teardown"):
                 if outcome == "failed":
                     outcome = "error"
-                elif getattr(report, "block", False):
+                elif getattr(report, "blocked", False):  # Establish compatibility to pytest-adaptavist
                     outcome = "blocked"
                 elif not report.skipped:
                     outcome = ""
@@ -83,16 +86,19 @@ class PrettyTerminalReporter:
         """Print docstring and parameters of a test case."""
         self.terminal_reporter.line("")
         self.terminal_reporter.write_sep("-", title, bold=True)
-        doc_splitted = user_properties["docstr"].split("\n") or [""]
+
+        # Strip leading whitespaces to the same level and print doc strings
+        doc_splitted: List[str] = user_properties["docstr"].split("\n")
         leading_spaces = 0
-        for s in doc_splitted:
-            if s:
-                leading_spaces = len(s) - len(s.lstrip())
+        for line in doc_splitted:
+            if line:  # Ignore leading empty lines
+                leading_spaces = len(line) - len(line.lstrip())
                 break
-        if leading_spaces:
-            for i, s in enumerate(doc_splitted):
-                doc_splitted[i] = s[leading_spaces:]
+        for i, line in enumerate(doc_splitted):
+            doc_splitted[i] = line[leading_spaces:]
         user_properties["docstr"] = "\n".join(doc_splitted)
-        self.terminal_reporter.write_line(user_properties["docstr"] or "")
+        self.terminal_reporter.write_line(user_properties["docstr"])
+
+        # Print parameters
         for parameter, value in user_properties.get("params", {}).items():
             self.terminal_reporter.write_line(f"Parameterization: {parameter} = {value}")
