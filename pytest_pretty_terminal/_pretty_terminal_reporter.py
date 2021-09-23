@@ -56,9 +56,10 @@ class PrettyTerminalReporter:
 
         self.terminal_reporter.write_sep("-", bold=True)
         fill = getattr(self.terminal_reporter, "_tw").fullwidth - getattr(self.terminal_reporter, "_width_of_current_line") - 1
-        self.terminal_reporter.write_line(report.outcome.upper().rjust(fill), **COLORMAP.get(report.outcome, {}))
+        outcome = "blocked" if getattr(report, "block", False) else report.outcome
+        self.terminal_reporter.write_line(outcome.upper().rjust(fill), **COLORMAP.get(outcome, {}))
 
-    @pytest.hookimpl(tryfirst=True)
+    @pytest.hookimpl()
     def pytest_report_teststatus(self, report: TestReport) -> Optional[Tuple[str, str, str]]:
         """
         Return result-category, shortletter and verbose word for status reporting.
@@ -71,6 +72,8 @@ class PrettyTerminalReporter:
             if report.when in ("collect", "setup", "teardown"):
                 if outcome == "failed":
                     outcome = "error"
+                elif getattr(report, "block", False):
+                    outcome = "blocked"
                 elif not report.skipped:
                     outcome = ""
             return outcome, "", ""
@@ -80,6 +83,16 @@ class PrettyTerminalReporter:
         """Print docstring and parameters of a test case."""
         self.terminal_reporter.line("")
         self.terminal_reporter.write_sep("-", title, bold=True)
+        doc_splitted = user_properties["docstr"].split("\n") or [""]
+        leading_spaces = 0
+        for s in doc_splitted:
+            if s:
+                leading_spaces = len(s) - len(s.lstrip())
+                break
+        if leading_spaces:
+            for i, s in enumerate(doc_splitted):
+                doc_splitted[i] = s[leading_spaces:]
+        user_properties["docstr"] = "\n".join(doc_splitted)
         self.terminal_reporter.write_line(user_properties["docstr"] or "")
         for parameter, value in user_properties.get("params", {}).items():
             self.terminal_reporter.write_line(f"Parameterization: {parameter} = {value}")
