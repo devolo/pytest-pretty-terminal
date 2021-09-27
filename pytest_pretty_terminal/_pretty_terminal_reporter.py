@@ -86,9 +86,7 @@ class PrettyTerminalReporter:
         """Print docstring and parameters of a test case."""
         self.terminal_reporter.line("")
         self.terminal_reporter.write_sep("-", title, bold=True)
-
-        # Strip leading whitespaces to the same level and print doc strings
-        doc_splitted: List[str] = user_properties["docstr"].split("\n")
+        doc_splitted: List[str] = (user_properties.get("docstr") or "").split("\n")
         leading_spaces = 0
         for line in doc_splitted:
             if line:  # Ignore leading empty lines
