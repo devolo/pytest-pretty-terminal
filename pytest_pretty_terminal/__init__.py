@@ -5,7 +5,7 @@ import shutil
 from importlib.metadata import PackageNotFoundError, version
 
 import pytest
-from _pytest._io.terminalwriter import TerminalWriter
+from _pytest._io import TerminalWriter
 from _pytest.config import Config
 from _pytest.config.argparsing import Parser
 from _pytest.logging import _LiveLoggingStreamHandler, get_log_level_for_setting

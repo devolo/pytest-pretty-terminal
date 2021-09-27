@@ -14,7 +14,7 @@ setup(name="pytest-pretty-terminal",
       entry_points={"pytest11": ["pretty-terminal = pytest_pretty_terminal"]},
       platforms="any",
       python_requires=">=3.8",
-      install_requires=["pytest>=3.4.1"],
+      install_requires=["pytest>=5.4.0"],
       keywords="python pytest adaptavist kanoah tm4j jira test testmanagement report",
       classifiers=[
           "Framework :: Pytest",

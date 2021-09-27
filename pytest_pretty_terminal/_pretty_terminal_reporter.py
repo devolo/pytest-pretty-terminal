@@ -3,7 +3,7 @@
 from typing import Any, Dict, List, Optional, Tuple
 
 import pytest
-from _pytest._io.terminalwriter import TerminalWriter
+from _pytest._io import TerminalWriter
 from _pytest.config import Config
 from _pytest.reports import TestReport
 from _pytest.terminal import TerminalReporter
