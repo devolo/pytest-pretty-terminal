@@ -13,8 +13,8 @@ COLORMAP = {
     "failed": {"red": True, "bold": True},
     "blocked": {"blue": True, "bold": True},
     "skipped": {"yellow": True, "bold": True},
-    "xfail": {"yellow": True, "bold": True},
-    "xpass": {"yellow": True, "bold": True}
+    "xfailed": {"yellow": True, "bold": True},
+    "xpassed": {"yellow": True, "bold": True}
 }
 
 
@@ -62,9 +62,9 @@ class PrettyTerminalReporter:
         if getattr(report, "blocked", False):
             outcome = "blocked"
         elif hasattr(report, "wasxfail") and report.outcome == "skipped":
-            outcome = "xfail"
+            outcome = "xfailed"
         elif hasattr(report, "wasxfail") and report.outcome == "passed":
-            outcome = "xpass"
+            outcome = "xpassed"
         else:
             outcome = report.outcome
 
