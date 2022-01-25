@@ -12,7 +12,9 @@ COLORMAP = {
     "passed": {"green": True, "bold": True},
     "failed": {"red": True, "bold": True},
     "blocked": {"blue": True, "bold": True},
-    "skipped": {"yellow": True, "bold": True}
+    "skipped": {"yellow": True, "bold": True},
+    "xfail": {"yellow": True, "bold": True},
+    "xpass": {"yellow": True, "bold": True}
 }
 
 
@@ -57,7 +59,14 @@ class PrettyTerminalReporter:
 
         terminal_writer: TerminalWriter = self.config.get_terminal_writer()
         fill = terminal_writer.fullwidth - terminal_writer.width_of_current_line - 1
-        outcome = "blocked" if getattr(report, "blocked", False) else report.outcome  # Establish compatibility to pytest-adaptavist
+        if getattr(report, "blocked", False):
+            outcome = "blocked"
+        elif hasattr(report, "wasxfail") and report.outcome == "skipped":
+            outcome = "xfail"
+        elif hasattr(report, "wasxfail") and report.outcome == "passed":
+            outcome = "xpass"
+        else:
+            outcome = report.outcome
 
         self.terminal_reporter.write_sep("-", bold=True)
         self.terminal_reporter.write_line(outcome.upper().rjust(fill), **COLORMAP.get(outcome, {}))
@@ -70,17 +79,22 @@ class PrettyTerminalReporter:
 
         :param report: The report object whose status is to be returned
         """
-        if getattr(self.config.option, "pretty", False):
-            outcome: str = report.outcome
-            if report.when in ("collect", "setup", "teardown"):
-                if outcome == "failed":
-                    outcome = "error"
-                elif getattr(report, "blocked", False):  # Establish compatibility to pytest-adaptavist
-                    outcome = "blocked"
-                elif not report.skipped:
-                    outcome = ""
-            return outcome, "", ""
-        return None
+        if not getattr(self.config.option, "pretty", False):
+            return None
+
+        outcome: str = report.outcome
+        if report.when in ("collect", "setup", "teardown"):
+            if hasattr(report, "wasxfail") and report.skipped:
+                outcome = "xfailed"
+            elif hasattr(report, "wasxfail") and report.passed:
+                outcome = "xpassed"
+            elif outcome == "failed":
+                outcome = "error"
+            elif getattr(report, "blocked", False):  # Establish compatibility to pytest-adaptavist
+                outcome = "blocked"
+            elif not report.skipped:
+                outcome = ""
+        return outcome, "", ""
 
     def _print_docstring_and_params(self, title: str, user_properties: Dict[str, Any]):
         """Print docstring and parameters of a test case."""
