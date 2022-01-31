@@ -24,7 +24,7 @@ class PrettyTerminalReporter:
     """
     Terminal reporter class used for prettifying terminal output (also used for synchronization of xdist-worker nodes).
 
-    :param config: The pytest config object
+    :param config: The pytest config fobject
     """
 
     def __init__(self, config: Config):
@@ -75,7 +75,7 @@ class PrettyTerminalReporter:
         self.terminal_reporter.write_sep("-", bold=True)
         self.terminal_reporter.write_line(outcome.upper().rjust(fill), **COLORMAP.get(outcome, {}))
 
-    @pytest.hookimpl(tryfirst=True)
+    @pytest.hookimpl()
     def pytest_report_teststatus(self, report: TestReport) -> Optional[Tuple[str, str, str]]:
         """
         Return result-category, shortletter and verbose word for status reporting.
