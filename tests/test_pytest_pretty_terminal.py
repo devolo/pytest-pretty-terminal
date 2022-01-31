@@ -13,9 +13,9 @@ def test_fail(pytester: pytest.Pytester):
         def test_a():
             assert False
         """)
-    outcome = pytester.runpytest("--pretty")
-    assert any("FAILED" in line for line in outcome.outlines)
-    outcome = outcome.parseoutcomes()
+    runtest = pytester.runpytest("--pretty")
+    assert any("FAILED" in line for line in runtest.outlines)
+    outcome = runtest.parseoutcomes()
     assert outcome["failed"] == 1
     assert len(outcome) == 1
 
@@ -27,9 +27,9 @@ def test_pass(pytester: pytest.Pytester):
         def test_a():
             assert True
         """)
-    outcome = pytester.runpytest("--pretty")
-    assert any("PASSED" in line for line in outcome.outlines)
-    outcome = outcome.parseoutcomes()
+    runtest = pytester.runpytest("--pretty")
+    assert any("PASSED" in line for line in runtest.outlines)
+    outcome = runtest.parseoutcomes()
     assert outcome["passed"] == 1
     assert len(outcome) == 1
 
@@ -42,9 +42,9 @@ def test_xfail(pytester: pytest.Pytester):
         def test_a():
             assert False
         """)
-    outcome = pytester.runpytest("--pretty")
-    assert any("XFAILED" in line for line in outcome.outlines)
-    outcome = outcome.parseoutcomes()
+    runtest = pytester.runpytest("--pretty")
+    assert any("XFAILED" in line for line in runtest.outlines)
+    outcome = runtest.parseoutcomes()
     assert outcome["xfailed"] == 1
     assert len(outcome) == 1
 
@@ -57,9 +57,9 @@ def test_xpass(pytester: pytest.Pytester):
         def test_a():
             assert True
         """)
-    outcome = pytester.runpytest("--pretty")
-    assert any("XPASSED" in line for line in outcome.outlines)
-    outcome = outcome.parseoutcomes()
+    runtest = pytester.runpytest("--pretty")
+    assert any("XPASSED" in line for line in runtest.outlines)
+    outcome = runtest.parseoutcomes()
     assert outcome["xpassed"] == 1
     assert len(outcome) == 1
 
@@ -72,9 +72,9 @@ def test_skip(pytester: pytest.Pytester):
         def test_a():
             assert True
         """)
-    outcome = pytester.runpytest("--pretty")
-    assert any("SKIPPED" in line for line in outcome.outlines)
-    outcome = outcome.parseoutcomes()
+    runtest = pytester.runpytest("--pretty")
+    assert any("SKIPPED" in line for line in runtest.outlines)
+    outcome = runtest.parseoutcomes()
     assert outcome["skipped"] == 1
     assert len(outcome) == 1
 
@@ -87,9 +87,9 @@ def test_skip_inside(pytester: pytest.Pytester):
             pytest.skip()
             assert True
         """)
-    outcome = pytester.runpytest("--pretty")
-    assert any("SKIPPED" in line for line in outcome.outlines)
-    outcome = outcome.parseoutcomes()
+    runtest = pytester.runpytest("--pretty")
+    assert any("SKIPPED" in line for line in runtest.outlines)
+    outcome = runtest.parseoutcomes()
     assert outcome["skipped"] == 1
     assert len(outcome) == 1
 
@@ -102,9 +102,9 @@ def test_block(pytester: pytest.Pytester):
         def test_a():
             assert True
         """)
-    outcome = pytester.runpytest("--pretty")
-    assert any("BLOCKED" in line for line in outcome.outlines)
-    outcome = outcome.parseoutcomes()
+    runtest = pytester.runpytest("--pretty")
+    assert any("BLOCKED" in line for line in runtest.outlines)
+    outcome = runtest.parseoutcomes()
     assert outcome["blocked"] == 1
     assert len(outcome) == 1
 
@@ -118,9 +118,9 @@ def test_block_inside(pytester: pytest.Pytester):
             pytest.block()
             assert True
         """)
-    outcome = pytester.runpytest("--pretty")
-    assert any("BLOCKED" in line for line in outcome.outlines)
-    outcome = outcome.parseoutcomes()
+    runtest = pytester.runpytest("--pretty")
+    assert any("BLOCKED" in line for line in runtest.outlines)
+    outcome = runtest.parseoutcomes()
     assert outcome["blocked"] == 1
     assert len(outcome) == 1
 
@@ -137,9 +137,9 @@ def test_error_setup(pytester: pytest.Pytester):
         def test_a(b):
             assert True
         """)
-    outcome = pytester.runpytest("--pretty")
-    assert any("ERROR" in line for line in outcome.outlines)
-    outcome = outcome.parseoutcomes()
+    runtest = pytester.runpytest("--pretty")
+    assert any("ERROR" in line for line in runtest.outlines)
+    outcome = runtest.parseoutcomes()
     assert outcome["errors"] == 1
     assert len(outcome) == 1
 
@@ -156,9 +156,9 @@ def test_error_teardown(pytester: pytest.Pytester):
         def test_a(b):
             assert True
         """)
-    outcome = pytester.runpytest("--pretty")
-    assert any("ERROR" in line for line in outcome.outlines)
-    outcome = outcome.parseoutcomes()
+    runtest = pytester.runpytest("--pretty")
+    assert any("ERROR" in line for line in runtest.outlines)
+    outcome = runtest.parseoutcomes()
     assert outcome["errors"] == 1
     assert len(outcome) == 2  # The test_a is marked as passed, but in teardown marked as error. This is default behaviour
 
@@ -230,8 +230,8 @@ def test_parametrized_test(pytester: pytest.Pytester):
         def test_a(param_a):
             assert True
         """)
-    outcome = pytester.runpytest("--pretty")
-    assert any("Parameterization: param_a = True" in line for line in outcome.outlines)
-    assert any("Parameterization: param_a = False" in line for line in outcome.outlines)
-    outcome = outcome.parseoutcomes()
+    runtest = pytester.runpytest("--pretty")
+    assert any("Parameterization: param_a = True" in line for line in runtest.outlines)
+    assert any("Parameterization: param_a = False" in line for line in runtest.outlines)
+    outcome = runtest.parseoutcomes()
     assert len(outcome) == 1
