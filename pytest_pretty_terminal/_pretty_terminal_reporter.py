@@ -24,7 +24,7 @@ class PrettyTerminalReporter:
     """
     Terminal reporter class used for prettifying terminal output (also used for synchronization of xdist-worker nodes).
 
-    :param config: The pytest config fobject
+    :param config: The pytest config object
     """
 
     def __init__(self, config: Config):
