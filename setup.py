@@ -15,6 +15,7 @@ setup(name="pytest-pretty-terminal",
       platforms="any",
       python_requires=">=3.8",
       install_requires=["pytest>=3.4.1"],
+      extras_require={"test": ["pytest-adaptavist>=5.1.1"]},
       setup_requires=['setuptools_scm'],
       keywords="python pytest adaptavist kanoah tm4j jira test testmanagement report",
       classifiers=[
