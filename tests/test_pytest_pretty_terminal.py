@@ -19,6 +19,7 @@ def test_fail(pytester: pytest.Pytester):
     assert outcome["failed"] == 1
     assert len(outcome) == 1
 
+
 def test_pass(pytester: pytest.Pytester):
     """Test correct behavior of a passing test case."""
     pytester.makepyfile("""
@@ -32,6 +33,7 @@ def test_pass(pytester: pytest.Pytester):
     outcome = runtest.parseoutcomes()
     assert outcome["passed"] == 1
     assert len(outcome) == 1
+
 
 def test_xfail(pytester: pytest.Pytester):
     """Test correct behavior of an expected failing test case."""
@@ -48,6 +50,7 @@ def test_xfail(pytester: pytest.Pytester):
     assert outcome["xfailed"] == 1
     assert len(outcome) == 1
 
+
 def test_xpass(pytester: pytest.Pytester):
     """Test correct behavior of an unintended passing test case."""
     pytester.makepyfile("""
@@ -62,6 +65,7 @@ def test_xpass(pytester: pytest.Pytester):
     outcome = runtest.parseoutcomes()
     assert outcome["xpassed"] == 1
     assert len(outcome) == 1
+
 
 def test_skip(pytester: pytest.Pytester):
     """Test correct behavior of a test case skipped by marker."""
@@ -78,6 +82,7 @@ def test_skip(pytester: pytest.Pytester):
     assert outcome["skipped"] == 1
     assert len(outcome) == 1
 
+
 def test_skip_inside(pytester: pytest.Pytester):
     """Test correct behavior of a test case skipped by call."""
     pytester.makepyfile("""
@@ -92,6 +97,7 @@ def test_skip_inside(pytester: pytest.Pytester):
     outcome = runtest.parseoutcomes()
     assert outcome["skipped"] == 1
     assert len(outcome) == 1
+
 
 def test_block(pytester: pytest.Pytester):
     """Test correct behavior of a test case blocked by marker (needs pytest-adaptavist)."""
@@ -143,6 +149,7 @@ def test_error_setup(pytester: pytest.Pytester):
     assert outcome["errors"] == 1
     assert len(outcome) == 1
 
+
 def test_error_teardown(pytester: pytest.Pytester):
     """Test correct behavior of a teardown error."""
     pytester.makepyfile("""
@@ -161,6 +168,7 @@ def test_error_teardown(pytester: pytest.Pytester):
     outcome = runtest.parseoutcomes()
     assert outcome["errors"] == 1
     assert len(outcome) == 2  # The test_a is marked as passed, but in teardown marked as error. This is default behaviour
+
 
 def test_all_tests_cases_together(pytester: pytest.Pytester):
     """Test correct counting of test case outcomes."""
@@ -220,6 +228,7 @@ def test_all_tests_cases_together(pytester: pytest.Pytester):
     assert outcome["xpassed"] == 1
     assert outcome["errors"] == 2
     assert outcome["blocked"] == 2
+
 
 def test_parametrized_test(pytester: pytest.Pytester):
     """Test output of parameters."""
