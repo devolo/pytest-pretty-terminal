@@ -207,3 +207,17 @@ def test_all_tests_cases_together(pytester: pytest.Pytester):
     assert outcome["xpassed"] == 1
     assert outcome["errors"] == 2
     assert outcome["blocked"] == 2
+
+def test_parametrized_test(pytester: pytest.Pytester):
+    pytester.makepyfile("""
+        import pytest
+
+        @pytest.mark.parametrize("param_a", [True, False])
+        def test_a(param_a):
+            assert True
+        """)
+    outcome = pytester.runpytest("--pretty")
+    assert any("Parameterization: param_a = True" in line for line in outcome.outlines)
+    assert any("Parameterization: param_a = False" in line for line in outcome.outlines)
+    outcome = outcome.parseoutcomes()
+    assert len(outcome) == 1
