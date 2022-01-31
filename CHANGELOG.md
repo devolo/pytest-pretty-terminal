@@ -8,21 +8,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### Added
 
-Blocked testcases are in blue color now
-
-We have unittests now :rocket:
+* Blocked testcases are in blue color now
+* Errors in setup or teardown are shown
+* We have unittests now :rocket:
 
 ## [1.0.2] - 2022/01/25
 
 ### Fixed
 
-Fix XFAIL/XPASS handling
+* Fix XFAIL/XPASS handling
 
 ## [1.0.1] - 2021/11/24
 
 ### Fixed
 
-Fix setup
+* Fix setup
 
 ## [1.0.0] - 2021/11/24
 
