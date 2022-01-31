@@ -1,9 +1,12 @@
+"""Test basic functionality of the plugin."""
+
 import pytest
 
 pytest_plugins = ("pytester", )
 
 
 def test_fail(pytester: pytest.Pytester):
+    """Test correct behavior of a failing test case."""
     pytester.makepyfile("""
         import pytest
 
@@ -17,6 +20,7 @@ def test_fail(pytester: pytest.Pytester):
     assert len(outcome) == 1
 
 def test_pass(pytester: pytest.Pytester):
+    """Test correct behavior of a passing test case."""
     pytester.makepyfile("""
         import pytest
 
@@ -30,6 +34,7 @@ def test_pass(pytester: pytest.Pytester):
     assert len(outcome) == 1
 
 def test_xfail(pytester: pytest.Pytester):
+    """Test correct behavior of an expected failing test case."""
     pytester.makepyfile("""
         import pytest
 
@@ -44,6 +49,7 @@ def test_xfail(pytester: pytest.Pytester):
     assert len(outcome) == 1
 
 def test_xpass(pytester: pytest.Pytester):
+    """Test correct behavior of an unintended passing test case."""
     pytester.makepyfile("""
         import pytest
 
@@ -58,6 +64,7 @@ def test_xpass(pytester: pytest.Pytester):
     assert len(outcome) == 1
 
 def test_skip(pytester: pytest.Pytester):
+    """Test correct behavior of a test case skipped by marker."""
     pytester.makepyfile("""
         import pytest
 
@@ -72,6 +79,7 @@ def test_skip(pytester: pytest.Pytester):
     assert len(outcome) == 1
 
 def test_skip_inside(pytester: pytest.Pytester):
+    """Test correct behavior of a test case skipped by call."""
     pytester.makepyfile("""
         import pytest
 
@@ -86,6 +94,7 @@ def test_skip_inside(pytester: pytest.Pytester):
     assert len(outcome) == 1
 
 def test_block(pytester: pytest.Pytester):
+    """Test correct behavior of a test case blocked by marker (needs pytest-adaptavist)."""
     pytester.makepyfile("""
         import pytest
 
@@ -101,6 +110,7 @@ def test_block(pytester: pytest.Pytester):
 
 
 def test_block_inside(pytester: pytest.Pytester):
+    """Test correct behavior of a test case blocked by marker (needs pytest-adaptavist)."""
     pytester.makepyfile("""
         import pytest
 
@@ -116,6 +126,7 @@ def test_block_inside(pytester: pytest.Pytester):
 
 
 def test_error_setup(pytester: pytest.Pytester):
+    """Test correct behavior of a setup error."""
     pytester.makepyfile("""
         import pytest
 
@@ -133,6 +144,7 @@ def test_error_setup(pytester: pytest.Pytester):
     assert len(outcome) == 1
 
 def test_error_teardown(pytester: pytest.Pytester):
+    """Test correct behavior of a teardown error."""
     pytester.makepyfile("""
         import pytest
 
@@ -151,6 +163,7 @@ def test_error_teardown(pytester: pytest.Pytester):
     assert len(outcome) == 2  # The test_a is marked as passed, but in teardown marked as error. This is default behaviour
 
 def test_all_tests_cases_together(pytester: pytest.Pytester):
+    """Test correct counting of test case outcomes."""
     pytester.makepyfile("""
         import pytest
 
@@ -209,6 +222,7 @@ def test_all_tests_cases_together(pytester: pytest.Pytester):
     assert outcome["blocked"] == 2
 
 def test_parametrized_test(pytester: pytest.Pytester):
+    """Test output of parameters."""
     pytester.makepyfile("""
         import pytest
 
