@@ -64,8 +64,8 @@ def enable_terminal_report(config: Config):
     # However, we need to reregister the terminalreporter to get the overwrites in place.
     terminal_reporter: TerminalReporter = config.pluginmanager.getplugin("terminalreporter")
     config.pluginmanager.unregister(terminal_reporter)
-    terminal_reporter.pytest_runtest_logstart = lambda nodeid, location: None
-    terminal_reporter.pytest_runtest_logfinish = lambda nodeid: None
+    terminal_reporter.pytest_runtest_logstart = lambda nodeid, location: None  # type: ignore
+    terminal_reporter.pytest_runtest_logfinish = lambda nodeid: None  # type: ignore
     config.pluginmanager.register(terminal_reporter, "terminalreporter")
 
     # Enable logging and set the loglevel. Without this, live logging would be disabled.
