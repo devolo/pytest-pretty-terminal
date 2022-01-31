@@ -20,7 +20,6 @@ COLORMAP = {
 _color_for_type["blocked"] = "blue"
 
 
-
 class PrettyTerminalReporter:
     """
     Terminal reporter class used for prettifying terminal output (also used for synchronization of xdist-worker nodes).
