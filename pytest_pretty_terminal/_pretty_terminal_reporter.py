@@ -89,6 +89,7 @@ class PrettyTerminalReporter:
 
         outcome: str = report.outcome
         if report.when in ("collect", "setup", "teardown"):
+
             if outcome == "failed":
                 outcome = "error"
             elif outcome == "passed":
