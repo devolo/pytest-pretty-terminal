@@ -6,12 +6,14 @@ from importlib.metadata import PackageNotFoundError, version
 
 import pytest
 from _pytest._io import TerminalWriter
+from _pytest.capture import CaptureManager
 from _pytest.config import Config
 from _pytest.config.argparsing import Parser
-from _pytest.logging import _LiveLoggingStreamHandler, get_log_level_for_setting
+from _pytest.logging import LoggingPlugin, _LiveLoggingStreamHandler, get_log_level_for_setting
 from _pytest.python import Function
 from _pytest.reports import CollectReport, TestReport
 from _pytest.runner import CallInfo
+from _pytest.terminal import TerminalReporter
 
 from ._pretty_terminal_reporter import PrettyTerminalReporter
 
@@ -49,7 +51,7 @@ def enable_terminal_report(config: Config):
     pretty_terminal_reporter = PrettyTerminalReporter(config)
     config.pluginmanager.register(pretty_terminal_reporter, "pretty_terminal_reporter")
 
-    capture_manager = config.pluginmanager.getplugin("capturemanager")
+    capture_manager: CaptureManager = config.pluginmanager.getplugin("capturemanager")
 
     # Capturing needs to be turned off. Otherwise additional output might mess up our terminal.
     if getattr(config.option, "capture") != "no":
@@ -60,7 +62,7 @@ def enable_terminal_report(config: Config):
 
     # The original terminal reporter needs some overwrites because we want to suppress output made during log start and finish.
     # However, we need to reregister the terminalreporter to get the overwrites in place.
-    terminal_reporter = config.pluginmanager.getplugin("terminalreporter")
+    terminal_reporter: TerminalReporter = config.pluginmanager.getplugin("terminalreporter")
     config.pluginmanager.unregister(terminal_reporter)
     terminal_reporter.pytest_runtest_logstart = lambda nodeid, location: None
     terminal_reporter.pytest_runtest_logfinish = lambda nodeid: None
@@ -68,7 +70,7 @@ def enable_terminal_report(config: Config):
 
     # Enable logging and set the loglevel. Without this, live logging would be disabled.
     # Still we want to respect to settings made via config.
-    logging_plugin = config.pluginmanager.getplugin("logging-plugin")
+    logging_plugin: LoggingPlugin = config.pluginmanager.getplugin("logging-plugin")
     logging_plugin.log_cli_handler = _LiveLoggingStreamHandler(terminal_reporter, capture_manager)
     logging_plugin.log_cli_level = get_log_level_for_setting(config, "log_cli_level", "log_level") or logging.INFO
 
