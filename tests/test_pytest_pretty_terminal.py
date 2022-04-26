@@ -2,17 +2,19 @@
 
 import pytest
 
-pytest_plugins = ("pytester", )
+pytest_plugins = ("pytester",)
 
 
 def test_fail(pytester: pytest.Pytester):
     """Test correct behavior of a failing test case."""
-    pytester.makepyfile("""
+    pytester.makepyfile(
+        """
         import pytest
 
         def test_a():
             assert False
-        """)
+        """
+    )
     runtest = pytester.runpytest("--pretty")
     assert any("FAILED" in line for line in runtest.outlines)
     outcome = runtest.parseoutcomes()
@@ -22,12 +24,14 @@ def test_fail(pytester: pytest.Pytester):
 
 def test_pass(pytester: pytest.Pytester):
     """Test correct behavior of a passing test case."""
-    pytester.makepyfile("""
+    pytester.makepyfile(
+        """
         import pytest
 
         def test_a():
             assert True
-        """)
+        """
+    )
     runtest = pytester.runpytest("--pretty")
     assert any("PASSED" in line for line in runtest.outlines)
     outcome = runtest.parseoutcomes()
@@ -37,13 +41,15 @@ def test_pass(pytester: pytest.Pytester):
 
 def test_xfail(pytester: pytest.Pytester):
     """Test correct behavior of an expected failing test case."""
-    pytester.makepyfile("""
+    pytester.makepyfile(
+        """
         import pytest
 
         @pytest.mark.xfail
         def test_a():
             assert False
-        """)
+        """
+    )
     runtest = pytester.runpytest("--pretty")
     assert any("XFAILED" in line for line in runtest.outlines)
     outcome = runtest.parseoutcomes()
@@ -53,13 +59,15 @@ def test_xfail(pytester: pytest.Pytester):
 
 def test_xpass(pytester: pytest.Pytester):
     """Test correct behavior of an unintended passing test case."""
-    pytester.makepyfile("""
+    pytester.makepyfile(
+        """
         import pytest
 
         @pytest.mark.xfail
         def test_a():
             assert True
-        """)
+        """
+    )
     runtest = pytester.runpytest("--pretty")
     assert any("XPASSED" in line for line in runtest.outlines)
     outcome = runtest.parseoutcomes()
@@ -69,13 +77,15 @@ def test_xpass(pytester: pytest.Pytester):
 
 def test_skip(pytester: pytest.Pytester):
     """Test correct behavior of a test case skipped by marker."""
-    pytester.makepyfile("""
+    pytester.makepyfile(
+        """
         import pytest
 
         @pytest.mark.skip
         def test_a():
             assert True
-        """)
+        """
+    )
     runtest = pytester.runpytest("--pretty")
     assert any("SKIPPED" in line for line in runtest.outlines)
     outcome = runtest.parseoutcomes()
@@ -85,13 +95,15 @@ def test_skip(pytester: pytest.Pytester):
 
 def test_skip_inside(pytester: pytest.Pytester):
     """Test correct behavior of a test case skipped by call."""
-    pytester.makepyfile("""
+    pytester.makepyfile(
+        """
         import pytest
 
         def test_a():
             pytest.skip()
             assert True
-        """)
+        """
+    )
     runtest = pytester.runpytest("--pretty")
     assert any("SKIPPED" in line for line in runtest.outlines)
     outcome = runtest.parseoutcomes()
@@ -101,13 +113,15 @@ def test_skip_inside(pytester: pytest.Pytester):
 
 def test_block(pytester: pytest.Pytester):
     """Test correct behavior of a test case blocked by marker (needs pytest-adaptavist)."""
-    pytester.makepyfile("""
+    pytester.makepyfile(
+        """
         import pytest
 
         @pytest.mark.block
         def test_a():
             assert True
-        """)
+        """
+    )
     runtest = pytester.runpytest("--pretty")
     assert any("BLOCKED" in line for line in runtest.outlines)
     outcome = runtest.parseoutcomes()
@@ -117,13 +131,15 @@ def test_block(pytester: pytest.Pytester):
 
 def test_block_inside(pytester: pytest.Pytester):
     """Test correct behavior of a test case blocked by marker (needs pytest-adaptavist)."""
-    pytester.makepyfile("""
+    pytester.makepyfile(
+        """
         import pytest
 
         def test_a():
             pytest.block()
             assert True
-        """)
+        """
+    )
     runtest = pytester.runpytest("--pretty")
     assert any("BLOCKED" in line for line in runtest.outlines)
     outcome = runtest.parseoutcomes()
@@ -133,7 +149,8 @@ def test_block_inside(pytester: pytest.Pytester):
 
 def test_error_setup(pytester: pytest.Pytester):
     """Test correct behavior of a setup error."""
-    pytester.makepyfile("""
+    pytester.makepyfile(
+        """
         import pytest
 
         @pytest.fixture
@@ -142,7 +159,8 @@ def test_error_setup(pytester: pytest.Pytester):
 
         def test_a(b):
             assert True
-        """)
+        """
+    )
     runtest = pytester.runpytest("--pretty")
     assert any("ERROR" in line for line in runtest.outlines)
     outcome = runtest.parseoutcomes()
@@ -152,7 +170,8 @@ def test_error_setup(pytester: pytest.Pytester):
 
 def test_error_teardown(pytester: pytest.Pytester):
     """Test correct behavior of a teardown error."""
-    pytester.makepyfile("""
+    pytester.makepyfile(
+        """
         import pytest
 
         @pytest.fixture
@@ -162,7 +181,8 @@ def test_error_teardown(pytester: pytest.Pytester):
 
         def test_a(b):
             assert True
-        """)
+        """
+    )
     runtest = pytester.runpytest("--pretty")
     assert any("ERROR" in line for line in runtest.outlines)
     outcome = runtest.parseoutcomes()
@@ -172,7 +192,8 @@ def test_error_teardown(pytester: pytest.Pytester):
 
 def test_all_tests_cases_together(pytester: pytest.Pytester):
     """Test correct counting of test case outcomes."""
-    pytester.makepyfile("""
+    pytester.makepyfile(
+        """
         import pytest
 
         def test_a():
@@ -219,7 +240,8 @@ def test_all_tests_cases_together(pytester: pytest.Pytester):
 
         def test_j(j_fixture):
             assert True
-        """)
+        """
+    )
     outcome = pytester.runpytest("--pretty").parseoutcomes()
     assert outcome["failed"] == 1
     assert outcome["passed"] == 2
@@ -232,13 +254,15 @@ def test_all_tests_cases_together(pytester: pytest.Pytester):
 
 def test_parametrized_test(pytester: pytest.Pytester):
     """Test output of parameters."""
-    pytester.makepyfile("""
+    pytester.makepyfile(
+        """
         import pytest
 
         @pytest.mark.parametrize("param_a", [True, False])
         def test_a(param_a):
             assert True
-        """)
+        """
+    )
     runtest = pytester.runpytest("--pretty")
     assert any("Parameterization: param_a = True" in line for line in runtest.outlines)
     assert any("Parameterization: param_a = False" in line for line in runtest.outlines)

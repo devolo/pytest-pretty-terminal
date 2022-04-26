@@ -15,7 +15,7 @@ COLORMAP = {
     "passed": {"green": True, "bold": True},
     "skipped": {"yellow": True, "bold": True},
     "xfailed": {"yellow": True, "bold": True},
-    "xpassed": {"yellow": True, "bold": True}
+    "xpassed": {"yellow": True, "bold": True},
 }
 _color_for_type["blocked"] = "blue"
 
