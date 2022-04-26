@@ -35,7 +35,7 @@ def pytest_runtest_makereport(item: Function, call: CallInfo):  # pylint: disabl
     """
     outcome: CollectReport = yield
     report: TestReport = outcome.get_result()
-    if hasattr(item, 'callspec'):
+    if hasattr(item, "callspec"):
         report.user_properties.append(("params", item.callspec.params))
     report.user_properties.append(("docstr", item.obj.__doc__))
 
@@ -90,6 +90,7 @@ def patch_terminal_size(config: Config):
     try:
         # Calculate terminal size from screen dimension (e.g. 1920 -> 192)
         import tkinter  # pylint: disable=import-outside-toplevel
+
         default_width = min(192, int((tkinter.Tk().winfo_screenwidth() + 9) / 10))
         default_height = int((tkinter.Tk().winfo_screenheight() + 19) / 20)
     except Exception:  # pylint: disable=broad-except
@@ -108,10 +109,7 @@ def pytest_configure(config: Config):
 
     :param config: The pytest config object
     """
-    if (
-        not hasattr(config, "workerinput")
-        and getattr(config.option, "pretty", False)
-    ):
+    if not hasattr(config, "workerinput") and getattr(config.option, "pretty", False):
         enable_terminal_report(config)
     patch_terminal_size(config)
 
@@ -123,5 +121,10 @@ def pytest_addoption(parser: Parser):
     :param parser: Parser for command line arguments and ini-file values
     """
     group = parser.getgroup("pretty-terminal")
-    group.addoption("--pretty", action="store_true", dest="pretty", default=False,
-                    help="Make pytest terminal output more readable (default: False)")
+    group.addoption(
+        "--pretty",
+        action="store_true",
+        dest="pretty",
+        default=False,
+        help="Make pytest terminal output more readable (default: False)",
+    )
